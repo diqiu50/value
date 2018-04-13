@@ -1,0 +1,13 @@
+LIBNAME = Util
+
+include ../../Tuprules.tup
+
+CFLAGS += -I../ -I../../Include
+ifeq ($(RELEASE_VERSION),release)
+	CFLAGS += -O2
+endif
+OBJDIR = ../../obj/$(LIBNAME)
+LIBDIR = ../../obj
+
+: foreach *.cpp |> g++ $(CFLAGS) -c %f -o %o |> $(OBJDIR)/%B.o
+: $(OBJDIR)/*.o |> ar crs %o %f |> $(LIBDIR)/lib$(LIBNAME).a ../../<mod>

@@ -11,6 +11,13 @@
 #ifndef Util_ValueRslt_h
 #define Util_ValueRslt_h
 
+#include "Util/ArithOpr.h"
+#include "Util/DataTypes.h"
+#include "Util/TypeDef.h"
+#include "Util/Opr.h"
+
+#include <string>
+
 namespace value
 {
 class ValueRslt
@@ -35,7 +42,7 @@ private:
 
 private:
 	DataValue			mValue;
-	DataType::E			mType;
+	DataType			mType;
 
 public:
 	ValueRslt();
@@ -45,30 +52,30 @@ public:
 	explicit ValueRslt(const u64 value);
 	explicit ValueRslt(const i64 value);
 	explicit ValueRslt(const double value);
-	explicit ValueRslt(const string &value);
+	explicit ValueRslt(const std::string &value);
 	explicit ValueRslt(const char value);
 
 	~ValueRslt();
 
 	void reset();
-	DataType::E getType() const;
+	DataType getType() const;
 
 	void setNull() {deleteMemory(); mType = DataType::eNull;}
 	bool isNull() const {return mType==DataType::eNull;}
-	static inline string getNullStr() {return "NULL";}
+	static inline std::string getNullStr() {return "NULL";}
 
 	// Set Value
 	void setDouble(const double vv);
 	void setU64(const u64 vv);
 	void setI64(const i64 vv);
-	void setStr(const string &vv);
+	void setStr(const std::string &vv);
 	void setBool(const bool vv);
 	void setChar(const char vv);
 
 	double 				getDouble() const;
 	u64 				getU64() const;
 	i64 				getI64() const;
-	string 				getStr() const;
+	std::string 		getStr() const;
 	bool				getBool() const;
 	char				getChar() const;
 	const char* const 	getCStr(int &len) const;
@@ -83,19 +90,19 @@ public:
 
 	static ValueRslt doArith(
 			const ArithOpr::E opr,
-			const DataType::E return_type,
+			const DataType return_type,
 			const ValueRslt &lv,
 			const ValueRslt &rv);
 
 	static bool doComparison(
 			const Opr opr,
-			const DataType::E value_type,
+			const DataType value_type,
 			const ValueRslt &lv,
 			const ValueRslt &rv) ;
 private:
-	string	setStringValue();
-	string 	getStrValue();
-	void 		deleteMemory();
+	std::string		setStringValue();
+	std::string 	getStrValue();
+	void 			deleteMemory();
 
 };
 };

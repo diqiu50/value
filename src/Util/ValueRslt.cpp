@@ -3,12 +3,17 @@
 ////////////////////////////////////////////////////////////////////////////
 #include "Util/ValueRslt.h"
 
+#include <string.h>
+#include <iostream>
+
+using namespace std;
+namespace value
+{
 ValueRslt::ValueRslt()
 :
 mType(DataType::eNull)
 {
 	mValue.obj_value= 0;
-	mDoubleBits = -1;
 }
 
 
@@ -20,7 +25,6 @@ ValueRslt::ValueRslt(const ValueRslt &rhs)
 	{
 		int len = *(int*)(rhs.mValue.obj_value);
 		mValue.obj_value = new char[len + sizeof(int)];
-		AOS_COUNT_VALUE_RSLT_MEMORY;
 
 		memcpy(mValue.obj_value, rhs.mValue.obj_value, len + sizeof(int));
 	}
@@ -29,13 +33,11 @@ ValueRslt::ValueRslt(const ValueRslt &rhs)
 		mValue = rhs.mValue;
 	}
 	mType = rhs.mType;
-	mDoubleBits = rhs.mDoubleBits;
 }
 
 ValueRslt::ValueRslt(const u64 value)
 {
 	mType = DataType::eU64;
-	mDoubleBits = -1;
 	mValue.u64_value = value;
 }
 
@@ -43,7 +45,6 @@ ValueRslt::ValueRslt(const u64 value)
 ValueRslt::ValueRslt(const bool value)
 {
 	mType = DataType::eBool;
-	mDoubleBits = -1;
 	mValue.bool_value = value;
 }
 
@@ -51,7 +52,6 @@ ValueRslt::ValueRslt(const bool value)
 ValueRslt::ValueRslt(const i64 value)
 {
 	mType = DataType::eInt64;
-	mDoubleBits = -1;
 	mValue.i64_value = value;
 }
 
@@ -59,20 +59,17 @@ ValueRslt::ValueRslt(const i64 value)
 ValueRslt::ValueRslt(const double value)
 {
 	mType = DataType::eDouble;
-	mDoubleBits = -1;
 	mValue.double_value = value;
 }
 
 
 ValueRslt::ValueRslt(const string &value)
 {
-	mDoubleBits = -1;
 	int len = value.length();
 	if (len + sizeof(int) >= eDefaultSize)
 	{
 		mType = DataType::eLongString;
 		mValue.obj_value = new char[len + sizeof(int)];
-		AOS_COUNT_VALUE_RSLT_MEMORY;
 
 		*(int*)(mValue.obj_value) = len;
 		memcpy((char *)(mValue.obj_value) + sizeof(int), value.data(), len);
@@ -89,7 +86,6 @@ ValueRslt::ValueRslt(const string &value)
 ValueRslt::ValueRslt(const char value)
 {
 	mType = DataType::eChar;
-	mDoubleBits = -1;
 	mValue.char_value = value;
 }
 
@@ -148,7 +144,6 @@ ValueRslt::setStr(const string &vv)
 		}
 		deleteMemory();
 		mValue.obj_value = new char[len + sizeof(int)];
-		AOS_COUNT_VALUE_RSLT_MEMORY;
 
 		*(int*)(mValue.obj_value) = len;
 		memcpy((char *)(mValue.obj_value) + sizeof(int), vv.data(), len);
@@ -192,7 +187,7 @@ ValueRslt::getChar() const
 		case DataType::eChar:
 			 return mValue.char_value;
 		default:
-			 OmnAlarm << "error" << enderr;
+			 cout << "error" << endl;
 			 return mValue.char_value;
 	}
 	return mValue.char_value;
@@ -232,7 +227,7 @@ ValueRslt::getCStr(int &len) const
 		 len = strlen(ch);
 		 return ch;
 	default:
-		OmnAlarm << "error" << enderr;
+		cout << "error" << endl;
 	}
 	return nullptr;
 }
@@ -246,16 +241,7 @@ ValueRslt::getCStrValue(int &len) const
 	return rr.data();
 }
 
-
-BuffPtr
-ValueRslt::getBuff() const
-{
-	aos_assert_r(mType == DataType::eBuff, nullptr);
-	return *(BuffPtr*)mValue.obj_value;
-}
-
-
-DataType::E
+DataType
 ValueRslt::getType() const
 {
 	if (mType == DataType::eShortString || mType == DataType::eLongString)
@@ -277,14 +263,12 @@ ValueRslt::operator = (const ValueRslt &rhs)
 		int len = *(int *)(rhs.mValue.obj_value);
 		mValue.obj_value = new char[len + sizeof(int)];
 
-		AOS_COUNT_VALUE_RSLT_MEMORY;
 		memcpy(mValue.obj_value, rhs.mValue.obj_value, len + sizeof(int));
 	}
 	else
 	{
 		mValue = rhs.mValue;
 	}
-	mDoubleBits = rhs.mDoubleBits;
 	return *this;
 }
 
@@ -307,21 +291,10 @@ ValueRslt::getBool() const
 	case DataType::eString:
 		 return getStr().length() != 0;
 	default:
-		 OmnAlarm << enderr;
+		 cout << endl;
 		 return false;
 	}
 	return false;
-}
-
-
-Set&
-ValueRslt::getSet() const
-{
-	static Set return_value(DataType::eInt64);
-	aos_assert_r(mType == DataType::eSet
-			|| mType == DataType::eSetCount, return_value);
-	Set* set= (Set*)(mValue.obj_value);
-	return *set;
 }
 
 
@@ -341,7 +314,7 @@ ValueRslt::getU64() const
 	case DataType::eDouble:
 		 return mValue.double_value;
 	default:
-		 OmnAlarm << enderr;
+		 cout << endl;
 		 return 0;
 	}
 	return 0;
@@ -363,7 +336,7 @@ ValueRslt::getI64() const
 	case DataType::eDouble:
 		 return mValue.double_value;
 	default:
-		 OmnAlarm << enderr;
+		 cout << endl;
 		 return 0;
 	}
 	return 0;
@@ -386,7 +359,7 @@ ValueRslt::getDouble() const
 	case DataType::eU64:
 		 return mValue.u64_value;
 	default:
-		 OmnAlarm << enderr;
+		 cout << endl;
 		 return 0;
 	}
 	return 0;
@@ -452,7 +425,7 @@ ValueRslt::getStr() const
 				 string v1((char *)((char *)(mValue.obj_value) + sizeof(int)), len);
 			 	 return v1;
 			 }
-			 OmnAlarm << enderr;
+			 cout << endl;
 			 break;
 		 }
 
@@ -460,7 +433,7 @@ ValueRslt::getStr() const
 		return "__NULL__";
 
 	default:
-		OmnAlarm << enderr;
+		cout << endl;
 		return "";
 	}
 	string vv(ch, strlen(ch));
@@ -485,8 +458,9 @@ ValueRslt::operator < (const ValueRslt &rhs) const
 {
 	if (isNull()) return true;
 	if (rhs.isNull()) return false;
-	DataType::E type = DataType::autoTypeConvert(getType(), rhs.getType());
-	return doComparison(Opr::eOpr_lt, type, *this, rhs);
+	//	DataType type = DataType::autoTypeConvert(getType(), rhs.getType());
+	//return doComparison(Opr::eOpr_lt, type, *this, rhs);
+	return false;
 }
 
 
@@ -495,8 +469,9 @@ ValueRslt::operator <= (const ValueRslt &rhs) const
 {
 	if (isNull()) return true;
 	if (rhs.isNull()) return false;
-	DataType::E type = DataType::autoTypeConvert(getType(), rhs.getType());
-	return doComparison(Opr::eOpr_le, type, *this, rhs);
+	//DataType type = DataType::autoTypeConvert(getType(), rhs.getType());
+	//return doComparison(Opr::eOpr_le, type, *this, rhs);
+	return false;
 }
 
 
@@ -505,8 +480,9 @@ ValueRslt::operator > (const ValueRslt &rhs) const
 {
 	if (isNull()) return true;
 	if (rhs.isNull()) return false;
-	DataType::E type = DataType::autoTypeConvert(getType(), rhs.getType());
-	return doComparison(Opr::eOpr_gt, type, *this, rhs);
+	//DataType type = DataType::autoTypeConvert(getType(), rhs.getType());
+	//return doComparison(Opr::eOpr_gt, type, *this, rhs);
+	return false;
 }
 
 
@@ -515,8 +491,9 @@ ValueRslt::operator >= (const ValueRslt &rhs) const
 {
 	if (isNull()) return true;
 	if (rhs.isNull()) return false;
-	DataType::E type = DataType::autoTypeConvert(getType(), rhs.getType());
-	return doComparison(Opr::eOpr_ge, type, *this, rhs);
+	//DataType type = DataType::autoTypeConvert(getType(), rhs.getType());
+	//return doComparison(Opr::eOpr_ge, type, *this, rhs);
+	return false;
 }
 
 
@@ -525,18 +502,20 @@ ValueRslt::operator == (const ValueRslt &rhs) const
 {
 	if (isNull()) return false;
 	if (rhs.isNull()) return false;
-	DataType::E type = DataType::autoTypeConvert(getType(), rhs.getType());
-	return doComparison(Opr::eOpr_eq , type, *this, rhs);
+	//DataType type = DataType::autoTypeConvert(getType(), rhs.getType());
+	//return doComparison(Opr::eOpr_eq , type, *this, rhs);
+	return false;
 }
 
 
 bool
 ValueRslt::doComparison(
 		const Opr opr,
-		const DataType::E value_type,
+		const DataType value_type,
 		const ValueRslt &lv,
 		const ValueRslt &rv)
 {
+	/*
 	switch (opr)
 	{
 	case Opr::eOpr_gt:
@@ -550,38 +529,12 @@ ValueRslt::doComparison(
 			return lv.getStr() > rv.getStr();
 		case DataType::eU64:
 			return (lv.getU64() > rv.getU64());
-		case DataType::eDateTime:
 		case DataType::eInt64:
 			return (lv.getI64() > rv.getI64());
-		case DataType::eDate:
-			return (lv.getDate() > rv.getDate());
 		case DataType::eDouble:
 			return (lv.getDouble() > rv.getDouble());
-		case DataType::eTime:
-			return (lv.getTime() > rv.getTime());
-		case DataType::eTimeStamp:
-			return (lv.getTimeStamp() > rv.getTimeStamp());
-		case DataType::eNumber:
-			{
-				if(lv.getType() == DataType::eNumber && rv.getType() == DataType::eDouble)
-				{
-					Number num(lv.getNumber().getPrecision(), lv.getNumber().getScale());
-					num.setValue(rv.getDouble());
-					return (lv.getNumber() > num);
-				}
-				else if(lv.getType() == DataType::eDouble && rv.getType() == DataType::eNumber)
-				{
-					Number num(rv.getNumber().getPrecision(), rv.getNumber().getScale());
-					num.setValue(lv.getDouble());
-					return (num > rv.getNumber());
-				}
-				else
-				{
-					return (lv.getNumber() > rv.getNumber());
-				}
-			}
 		default:
-			OmnAlarm << enderr;
+			cout << endl;
 			break;
 		}
 		break;
@@ -597,38 +550,12 @@ ValueRslt::doComparison(
 			return lv.getStr() >= rv.getStr();
 		case DataType::eU64:
 			return (lv.getU64() >= rv.getU64());
-		case DataType::eDateTime:
 		case DataType::eInt64:
 			return (lv.getI64() >= rv.getI64());
-		case DataType::eDate:
-			return (lv.getDate() >= rv.getDate());
 		case DataType::eDouble:
 			return (lv.getDouble() >= rv.getDouble());
-		case DataType::eTime:
-			return (lv.getTime() >= rv.getTime());
-		case DataType::eTimeStamp:
-			return (lv.getTimeStamp() >= rv.getTimeStamp());
-		case DataType::eNumber:
-			{
-				if(lv.getType() == DataType::eNumber && rv.getType() == DataType::eDouble)
-				{
-					Number num(lv.getNumber().getPrecision(), lv.getNumber().getScale());
-					num.setValue(rv.getDouble());
-					return (lv.getNumber() >= num);
-				}
-				else if(lv.getType() == DataType::eDouble && rv.getType() == DataType::eNumber)
-				{
-					Number num(rv.getNumber().getPrecision(), rv.getNumber().getScale());
-					num.setValue(lv.getDouble());
-					return (num >= rv.getNumber());
-				}
-				else
-				{
-					return (lv.getNumber() >= rv.getNumber());
-				}
-			}
 		default:
-			OmnAlarm << enderr;
+			cout << endl;
 			break;
 		}
 		break;
@@ -644,38 +571,10 @@ ValueRslt::doComparison(
 			return lv.getStr() == rv.getStr();
 		case DataType::eU64:
 			return (lv.getU64() == rv.getU64());
-		case DataType::eDateTime:
 		case DataType::eInt64:
 			return (lv.getI64() == rv.getI64());
-		case DataType::eDate:
-			return (lv.getDate() == rv.getDate());
-		case DataType::eDouble:
-			return (lv.getDouble() == rv.getDouble());
-		case DataType::eTime:
-			return (lv.getTime() == rv.getTime());
-		case DataType::eTimeStamp:
-			return (lv.getTimeStamp() == rv.getTimeStamp());
-		case DataType::eNumber:
-			{
-				if(lv.getType() == DataType::eNumber && rv.getType() == DataType::eDouble)
-				{
-					Number num(lv.getNumber().getPrecision(), lv.getNumber().getScale());
-					num.setValue(rv.getDouble());
-					return (lv.getNumber() == num);
-				}
-				else if(lv.getType() == DataType::eDouble && rv.getType() == DataType::eNumber)
-				{
-					Number num(rv.getNumber().getPrecision(), rv.getNumber().getScale());
-					num.setValue(lv.getDouble());
-					return (num == rv.getNumber());
-				}
-				else
-				{
-					return (lv.getNumber() == rv.getNumber());
-				}
-			}
 		default:
-			OmnAlarm << enderr;
+			cout << endl;
 			break;
 		}
 		break;
@@ -691,38 +590,12 @@ ValueRslt::doComparison(
 			return lv.getStr() < rv.getStr();
 		case DataType::eU64:
 			return (lv.getU64() < rv.getU64());
-		case DataType::eDateTime:
 		case DataType::eInt64:
 			return (lv.getI64() < rv.getI64());
-		case DataType::eDate:
-			return (lv.getDate() < rv.getDate());
 		case DataType::eDouble:
 			return (lv.getDouble() < rv.getDouble());
-		case DataType::eTime:
-			return (lv.getTime() < rv.getTime());
-		case DataType::eTimeStamp:
-			return (lv.getTimeStamp() < rv.getTimeStamp());
-		case DataType::eNumber:
-			{
-				if(lv.getType() == DataType::eNumber && rv.getType() == DataType::eDouble)
-				{
-					Number num(lv.getNumber().getPrecision(), lv.getNumber().getScale());
-					num.setValue(rv.getDouble());
-					return (lv.getNumber() < num);
-				}
-				else if(lv.getType() == DataType::eDouble && rv.getType() == DataType::eNumber)
-				{
-					Number num(rv.getNumber().getPrecision(), rv.getNumber().getScale());
-					num.setValue(lv.getDouble());
-					return (num < rv.getNumber());
-				}
-				else
-				{
-					return (lv.getNumber() < rv.getNumber());
-				}
-			}
 		default:
-			OmnAlarm << enderr;
+			cout << endl;
 			break;
 		}
 		break;
@@ -741,35 +614,10 @@ ValueRslt::doComparison(
 		case DataType::eDateTime:
 		case DataType::eInt64:
 			return (lv.getI64() <= rv.getI64());
-		case DataType::eDate:
-			return (lv.getDate() <= rv.getDate());
 		case DataType::eDouble:
 			return (lv.getDouble() <= rv.getDouble());
-		case DataType::eTime:
-			return (lv.getTime() <= rv.getTime());
-		case DataType::eTimeStamp:
-			return (lv.getTimeStamp() <= rv.getTimeStamp());
-		case DataType::eNumber:
-			{
-				if(lv.getType() == DataType::eNumber && rv.getType() == DataType::eDouble)
-				{
-					Number num(lv.getNumber().getPrecision(), lv.getNumber().getScale());
-					num.setValue(rv.getDouble());
-					return (lv.getNumber() <= num);
-				}
-				else if(lv.getType() == DataType::eDouble && rv.getType() == DataType::eNumber)
-				{
-					Number num(rv.getNumber().getPrecision(), rv.getNumber().getScale());
-					num.setValue(lv.getDouble());
-					return (num <= rv.getNumber());
-				}
-				else
-				{
-					return (lv.getNumber() <= rv.getNumber());
-				}
-			}
 		default:
-			OmnAlarm << enderr;
+			cout << endl;
 			break;
 		}
 		break;
@@ -785,47 +633,22 @@ ValueRslt::doComparison(
 			return lv.getStr() != rv.getStr();
 		case DataType::eU64:
 			return (lv.getU64() != rv.getU64());
-		case DataType::eDateTime:
 		case DataType::eInt64:
 			return (lv.getI64() != rv.getI64());
-		case DataType::eDate:
-			return (lv.getDate() != rv.getDate());
 		case DataType::eDouble:
 			return (lv.getDouble() != rv.getDouble());
-		case DataType::eTime:
-			return (lv.getTime() != rv.getTime());
-		case DataType::eTimeStamp:
-			return (lv.getTimeStamp() != rv.getTimeStamp());
-		case DataType::eNumber:
-			{
-				if(lv.getType() == DataType::eNumber && rv.getType() == DataType::eDouble)
-				{
-					Number num(lv.getNumber().getPrecision(), lv.getNumber().getScale());
-					num.setValue(rv.getDouble());
-					return (lv.getNumber() != num);
-				}
-				else if(lv.getType() == DataType::eDouble && rv.getType() == DataType::eNumber)
-				{
-					Number num(rv.getNumber().getPrecision(), rv.getNumber().getScale());
-					num.setValue(lv.getDouble());
-					return (num != rv.getNumber());
-				}
-				else
-				{
-					return (lv.getNumber() != rv.getNumber());
-				}
-			}
 		default:
-			OmnAlarm << enderr;
+			cout << endl;
 			break;
 		}
 		break;
 	default:
-		OmnAlarm << enderr;
+		cout << endl;
 		break;
 	}
 
-	OmnAlarm << enderr;
+	cout << endl;
+	*/
 	return false;
 }
 
@@ -833,11 +656,13 @@ ValueRslt::doComparison(
 ValueRslt
 ValueRslt::doArith(
 		const ArithOpr::E opr,
-		const DataType::E return_type,
+		const DataType return_type,
 		const ValueRslt &lv,
 		const ValueRslt &rv)
 {
 	ValueRslt vv;
+	return vv;
+	/*
 
 	switch (opr)
 	{
@@ -850,18 +675,12 @@ ValueRslt::doArith(
 					return ValueRslt(lv.getI64() + rv.getI64());
 				case DataType::eDouble:
 					{
-						//return ValueRslt(lv.getDouble() + rv.getDouble());
-						int r_bits = lv.getDoubleBits();
-						int l_bits = rv.getDoubleBits();
-						int rslt_bits = max(r_bits, l_bits);
-						ValueRslt value;
-						value.setDouble(lv.getDouble() + rv.getDouble(), rslt_bits);
-						return value;
+						return ValueRslt(lv.getDouble() + rv.getDouble());
 					}
 				case DataType::eNumber:
 					return ValueRslt(lv.getDouble() + rv.getDouble());
 				default:
-					OmnAlarm << enderr;
+					cout << endl;
 					break;
 			}
 			break;
@@ -875,18 +694,10 @@ ValueRslt::doArith(
 					return ValueRslt(lv.getI64() - rv.getI64());
 				case DataType::eDouble:
 					{
-						//return ValueRslt(lv.getDouble() - rv.getDouble());
-						int r_bits = lv.getDoubleBits();
-						int l_bits = rv.getDoubleBits();
-						int rslt_bits = max(r_bits, l_bits);
-						ValueRslt value;
-						value.setDouble(lv.getDouble() - rv.getDouble(), rslt_bits);
-						return value;
+						return ValueRslt(lv.getDouble() - rv.getDouble());
 					}
-				case DataType::eNumber:
-					return ValueRslt(lv.getDouble() - rv.getDouble());
 				default:
-					OmnAlarm << enderr;
+					cout << endl;
 					break;
 			}
 			break;
@@ -900,22 +711,12 @@ ValueRslt::doArith(
 					return ValueRslt(lv.getI64() * rv.getI64());
 				case DataType::eDouble:
 					{
-						//return ValueRslt(lv.getDouble() * rv.getDouble());
-						int r_bits = lv.getDoubleBits();
-						int l_bits = rv.getDoubleBits();
-						if (r_bits < 0 || l_bits < 0)
-						{
-							return ValueRslt(lv.getDouble() * rv.getDouble());
-						}
-						int rslt_bits = r_bits + l_bits;
-						ValueRslt value;
-						value.setDouble(lv.getDouble() * rv.getDouble(), rslt_bits);
-						return value;
+						return ValueRslt(lv.getDouble() * rv.getDouble());
 					}
 				case DataType::eNumber:
 					return ValueRslt(lv.getDouble() * rv.getDouble());
 				default:
-					OmnAlarm << enderr;
+					cout << endl;
 					break;
 			}
 			break;
@@ -929,10 +730,8 @@ ValueRslt::doArith(
 					return (!rv.getU64()) ? (vv) : (ValueRslt(lv.getI64() / rv.getI64()));
 				case DataType::eDouble:
 					return (abs(rv.getDouble()) <= 1e-15) ? (vv) : (ValueRslt(lv.getDouble() / rv.getDouble()));
-				case DataType::eNumber:
-					return (abs(rv.getDouble()) <= 1e-15) ? (vv) : ValueRslt(lv.getDouble() / rv.getDouble());
 				default:
-					OmnAlarm << enderr;
+					cout << endl;
 					break;
 			}
 			break;
@@ -945,73 +744,21 @@ ValueRslt::doArith(
 				case DataType::eInt64:
 					return (!rv.getI64()) ? (vv) : (ValueRslt(lv.getI64() % rv.getI64()));
 				default:
-					OmnAlarm << enderr;
+					cout << endl;
 					break;
 			}
 			break;
 
 		default:
-			OmnAlarm << enderr;
+			cout << endl;
 			break;
 	}
 
-	OmnAlarm << enderr;
+	cout << endl;
+	*/
 	return vv;
 }
 
 
-i64
-ValueRslt::getInstanceCount()
-{
-	OmnScreen << "ValueRslt memory count: " << sgMemoryCount << endl;
-	return sgInstanceCount;
-}
-
-
-i64
-ValueRslt::getTotalInstances()
-{
-	return sgTotalInstances;
-}
-
-
-int
-ValueRslt::getDoubleBits() const
-{
-	return mDoubleBits;
-}
-
-
-int
-ValueRslt::getDataLen(const DataType::E data_type, const char *data)
-{
-	// This function determines the length of the value, which is dependent on data type.
-	switch (data_type)
-	{
-		case DataType::eChar:
-			return sizeof(char);
-		case DataType::eBool:
-			return sizeof(bool);
-		case DataType::eInt64:
-			return sizeof(i64);
-		case DataType::eU64:
-			return sizeof(u64);
-		case DataType::eDouble:
-			return sizeof(double);
-		case DataType::eString:
-			return *(int*)data + 4;
-		default:
-			OmnAlarm << "error type" << enderr;
-			return false;
-	}
-	return false;
-}
-
-
-// Gavin, 2017/05/12
-const char *
-ValueRslt::getBinaryData() const
-{
-	return (char*)&mValue;
 }
 

@@ -1,0 +1,39 @@
+//RELEASE_VERSION = release
+RELEASE_VERSION = debug
+
+CFLAGS += -std=c++11
+
+CFLAGS += -Wall
+CFLAGS += -Wextra
+CFLAGS += -Wreturn-local-addr
+//CFLAGS += -Wfloat-equal
+
+CFLAGS += -Wno-unused-parameter
+CFLAGS += -Wno-ignored-qualifiers
+CFLAGS += -Wno-sign-compare
+CFLAGS += -Wno-unused-variable
+CFLAGS += -Wno-unused-but-set-variable
+CFLAGS += -Wno-deprecated-declarations
+//CFLAGS += -Wno-type-limits
+
+CFLAGS += -Werror=return-type
+//CFLAGS += -Werror=extra
+
+CFLAGS += -DOMN_PLATFORM_UNIX
+
+ifeq ($(RELEASE_VERSION),debug)
+
+	//CFLAGS += -fno-omit-frame-pointer
+	//CFLAGS += -fsanitize=address
+	//CFLAGS += -fsanitize=thread
+	//CFLAGS += -fsanitize=leak
+	//CFLAGS += -fsanitize=undefined
+
+	//CFLAGS += -Og
+	CFLAGS += -g
+
+	CFLAGS += -DUSE_TESTBOT
+	//CFLAGS += -DAOS_MEMORY_MEMORYPOOL
+
+endif
+
