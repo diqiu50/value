@@ -1,44 +1,20 @@
-# File: makefile
-#
-# This is a makefile for use with g++
-#
 LIBNAME = Util
 
-CC = g++
+BASEDIR = ../..
+LIBDIR = $(BASEDIR)/obj
+OBJDIR = $(LIBDIR)/$(LIBNAME)
+TARGETLIB = $(LIBDIR)/lib$(LIBNAME).a
 
-.SUFFIXES: .cpp .h
+include $(BASEDIR)/Makerules.dep
 
-FLAGS = -std=c++11 -g $(Optimize) -Wall
+CFLAGS += -I$(BASEDIR)/src -I$(BASEDIR)/Include
 
-INCDIRS = -I../ -I../../Include
-
-OBJDIR = ../../obj/$(LIBNAME)
-
-CREATEDIR = $(shell if [ -d $(OBJDIR) ]; then echo ""; else mkdir $(OBJDIR); fi)
-
-OUTPUTDIR = ../../obj
-
-LIBS = -L/usr/local/scws/lib -lnsl -lpthread -lstdc++ -lscws
-
-#
-# objects and targets
-#
-OBJECTS = $(patsubst %.cpp,$(OBJDIR)/%.o,$(wildcard *.cpp))
-
-TARGETLIB = lib$(LIBNAME).a
-
-#
-# Rules for normal comile and link
-#
-all:: lib
-
-lib: $(OBJECTS)
-	ar rvu $(TARGETLIB) $^
-	mv $(TARGETLIB) $(OUTPUTDIR)
+all: $(OBJECTS)
+	ar crs $(TARGETLIB) $^
 
 $(OBJECTS): $(OBJDIR)/%.o: %.cpp
 	$(CREATEDIR)
-	$(CC) -c $(FLAGS) $< $(INCDIRS) -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -rf $(OBJECTS) $(OUTPUTDIR)/$(TARGETLIB)
+	rm -rf $(OBJECTS) $(TARGETLIB)

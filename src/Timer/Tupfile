@@ -1,0 +1,10 @@
+LIBNAME = Timer
+
+include ../../Tuprules.tup
+
+CFLAGS += -I../ -I../../Include
+OBJDIR = ../../obj/$(LIBNAME)
+LIBDIR = ../../obj
+
+: foreach *.cpp |> g++ $(CFLAGS) -c %f -o %o |> $(OBJDIR)/%B.o
+: $(OBJDIR)/*.o |> ar crs %o %f |> $(LIBDIR)/lib$(LIBNAME).a ../../<mod>

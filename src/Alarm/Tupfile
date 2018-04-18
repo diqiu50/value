@@ -1,0 +1,13 @@
+LIBNAME = Alarm
+
+BASEDIR = ../..
+LIBDIR = $(BASEDIR)/obj
+OBJDIR = $(LIBDIR)/$(LIBNAME)
+TARGETLIB = $(LIBDIR)/lib$(LIBNAME).a
+
+include $(BASEDIR)/Tuprules.tup
+
+CFLAGS += -I$(BASEDIR)/src -I$(BASEDIR)/Include
+
+: foreach *.cpp |> g++ $(CFLAGS) -c %f -o %o |> $(OBJDIR)/%B.o
+: $(OBJDIR)/*.o |> ar crs %o %f |> $(TARGETLIB) $(BASEDIR)/<mod>
