@@ -20,10 +20,6 @@
 #include "Util/OmnNew.h"
 #include "XmlUtil/XmlTag.h"
 
-OmnSingletonImpl(AosTimerMgrNewSingleton,
-					AosTimerMgrNew,
-					AosTimerMgrNewSelf,
-					"AosTimerMgrNew");
 
 AosTimerMgrNew::AosTimerMgrNew()
 :
@@ -39,38 +35,37 @@ AosTimerMgrNew::~AosTimerMgrNew()
 }
 
 
-
-bool  
+bool
 AosTimerMgrNew::threadFunc(OmnThrdStatus &state, const OmnThreadPtr &thread)
 {
 	 while (state == OmnThrdStatus::eActive)
 	 {
-		 boost::asio::io_service::work work(mIoService); 
+		 boost::asio::io_service::work work(mIoService);
 		 mIoService.run();
 		 OmnAlarm << "AosTimerMgrNew error." << enderr;
 	 }
 	 return true;
 }
 
-bool 
+bool
 AosTimerMgrNew::signal(const int threadLogicId)
 {
 	return true;
 }
 
-bool   
+bool
 AosTimerMgrNew::checkThread(OmnString &err, const int thrdLogicId)
 {
 	return true;
 }
 
-bool 
+bool
 AosTimerMgrNew::config(const AosXmlTagPtr &def)
 {
 	return true;
 }
 
-bool 
+bool
 AosTimerMgrNew::start()
 {
 	OmnThreadedObjPtr thisPtr(this, false);
@@ -79,7 +74,7 @@ AosTimerMgrNew::start()
 	return true;
 }
 
-bool 
+bool
 AosTimerMgrNew::stop()
 {
 	mThread->stop();
@@ -87,13 +82,13 @@ AosTimerMgrNew::stop()
 	return true;
 }
 
-bool 			
+bool
 AosTimerMgrNew::remove(const int time_id)
 {
 	mLock.lock();
 	auto itr = mTimers.find(time_id);
 	aos_assert_rl(itr != mTimers.end(), &mLock, false);
-	timerptr_t t = itr->second; 
+	timerptr_t t = itr->second;
 	mTimers.erase(itr);
 	mLock.unlock();
 
@@ -108,7 +103,7 @@ AosTimerMgrNew::cancel(const int time_id)
 	mLock.lock();
 	auto itr = mTimers.find(time_id);
 	aos_assert_rl(itr != mTimers.end(), &mLock, false);
-	timerptr_t t = itr->second; 
+	timerptr_t t = itr->second;
 	mLock.unlock();
 	t->cancel();
 	return true;
